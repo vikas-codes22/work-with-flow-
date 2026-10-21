@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Discipline: Daily Tracker</title>
+<meta name="description" content="Build discipline one day at a time. Check off daily practices and grow your streaks. Saved in your browser.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500&family=Instrument+Serif&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #a9d6f5;
+  --raise: #d6ecfb;
+  --line: #7fb4dc;
+  --text: #10284a;
+  --muted: #34506f;
+  --accent: #10284a;
+  --pop: #ff7a4d;
+  --serif: "Instrument Serif", Georgia, "Times New Roman", serif;
+  --sans: "DM Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; min-height: 100vh; background: var(--bg); color: var(--text);
+  font-family: var(--sans); line-height: 1.5;
+}
+.app { max-width: 600px; margin: 0 auto; padding: 56px 24px 80px; }
+
+h1 { margin: 0; font-family: var(--serif); font-weight: 400; font-size: clamp(3rem, 13vw, 4.6rem); line-height: 1; letter-spacing: -0.01em; }
+header { margin-bottom: 0; }
+h1 { margin-bottom: 4px; }
+.tag { margin: 0 0 24px; font-family: var(--serif); font-style: italic; font-size: 1.3rem; color: var(--muted); }
+
+.datenav { display: grid; gap: 10px; margin-bottom: 26px; }
+.row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.row button {
+  width: 36px; height: 36px; border-radius: 50%; padding: 0; line-height: 1; font-size: 1.2rem; cursor: pointer;
+  background: var(--raise); border: 1px solid var(--line); color: var(--text);
+}
+.row button:hover { border-color: var(--accent); }
+.row .today-btn { width: auto; padding: 0 14px; border-radius: 18px; font: inherit; font-size: 0.85rem; color: var(--accent); }
+.today-btn[hidden] { display: none; }
+#month-label { font-family: var(--serif); font-size: 1.7rem; min-width: 9ch; text-align: center; }
+#day-label { min-width: 11ch; text-align: center; color: var(--muted); }
+#picker {
+  margin-left: auto; padding: 7px 10px; font: inherit; font-size: 0.85rem; color-scheme: light;
+  background: var(--raise); color: var(--text); border: 1px solid var(--line); border-radius: 10px;
+}
+.check:disabled { opacity: 0.3; cursor: not-allowed; }
+.progress { height: 3px; background: var(--line); border-radius: 3px; overflow: hidden; }
+.progress div { height: 100%; width: 0; background: var(--pop); transition: width 0.4s ease; }
+.summary { margin: 10px 0 36px; color: var(--muted); font-size: 0.9rem; min-height: 1.4em; }
+
+ul { list-style: none; margin: 0; padding: 0; }
+.habit { display: grid; grid-template-columns: auto 1fr auto; gap: 4px 18px; align-items: center; padding: 22px 0; border-top: 1px solid var(--line); }
+.habit:last-child { border-bottom: 1px solid var(--line); }
+
+.check {
+  grid-row: span 2; width: 38px; height: 38px; border-radius: 50%; padding: 0;
+  background: transparent; border: 1.5px solid var(--muted); color: var(--text);
+  font-size: 1.1rem; cursor: pointer; transition: background 0.2s, border-color 0.2s, transform 0.15s;
+}
+.check:hover { border-color: var(--accent); }
+.check:active { transform: scale(0.92); }
+.habit.done .check { background: var(--pop); border-color: var(--text); }
+
+.name { font-size: 1.15rem; font-weight: 500; word-break: break-word; }
+.habit.done .name { color: var(--muted); }
+
+.count { grid-row: span 2; text-align: right; line-height: 1; }
+.count b { display: block; font-family: var(--serif); font-weight: 400; font-size: 2.6rem; color: var(--accent); }
+.count span { font-size: 0.75rem; color: var(--muted); }
+
+.meta { display: flex; align-items: center; gap: 16px; }
+.week { display: flex; gap: 5px; }
+.dot { width: 9px; height: 9px; border-radius: 50%; border: 1px solid var(--muted); }
+.dot.on { background: var(--pop); border-color: var(--text); }
+.dot.today { outline: 1.5px solid var(--text); outline-offset: 2px; }
+
+.delete { background: none; border: 0; padding: 2px 0; color: var(--muted); font: inherit; font-size: 0.8rem; cursor: pointer; }
+.delete:hover { color: var(--text); text-decoration: underline; }
+.delete.armed { color: var(--accent); text-decoration: underline; }
+
+.add { display: flex; gap: 12px; margin-top: 40px; }
+.add input {
+  flex: 1; min-width: 0; padding: 13px 16px; font: inherit; color: var(--text);
+  background: var(--raise); border: 1px solid var(--line); border-radius: 10px;
+}
+.add input::placeholder { color: var(--muted); }
+.add button {
+  padding: 0 22px; font: inherit; font-weight: 500; cursor: pointer;
+  background: var(--pop); color: var(--text); border: 0; border-radius: 10px;
+}
+.add button:hover { filter: brightness(1.05); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+.empty { padding: 36px 0; color: var(--muted); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<main class="app">
+  <header>
+    <h1>Discipline</h1>
+    <p class="tag">Small acts, repeated daily.</p>
+    <nav class="datenav" aria-label="Change date">
+      <div class="row">
+        <button id="m-prev" aria-label="Previous month">‹</button>
+        <span id="month-label"></span>
+        <button id="m-next" aria-label="Next month">›</button>
+      </div>
+      <div class="row">
+        <button id="d-prev" aria-label="Previous day">‹</button>
+        <span id="day-label"></span>
+        <button id="d-next" aria-label="Next day">›</button>
+        <button id="today-btn" class="today-btn">Today</button>
+        <input type="date" id="picker" aria-label="Pick a date">
+      </div>
+    </nav>
+  </header>
+
+  <div class="progress" aria-hidden="true"><div id="bar"></div></div>
+  <p id="summary" class="summary"></p>
+
+  <ul id="habit-list"></ul>
+
+  <div class="add">
+    <input id="habit-input" type="text" placeholder="Add a daily practice, e.g. Read 10 pages" maxlength="40" aria-label="New habit name">
+    <button id="add-btn">Add</button>
+  </div>
+</main>
+
+<script>
+const STORAGE_KEY = "habits-v1";
+let habits = load();
+let armedId = null;
+let armTimer;
+let sel = new Date();   // the date being viewed
+sel.setHours(12, 0, 0, 0);
+
+const input = document.getElementById("habit-input");
+const list = document.getElementById("habit-list");
+const summary = document.getElementById("summary");
+const bar = document.getElementById("bar");
+
+function load() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; } catch { return []; }
+}
+function save() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(habits)); } catch {}
+}
+function dateKey(d) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+function daysAgo(n) { const d = new Date(sel); d.setDate(d.getDate() - n); return d; }
+function streak(h) {
+  let count = 0, i = h.done.includes(dateKey(sel)) ? 0 : 1;
+  while (h.done.includes(dateKey(daysAgo(i)))) { count++; i++; }
+  return count;
+}
+
+function addHabit() {
+  const name = input.value.trim();
+  if (!name) { input.focus(); return; }
+  habits.push({ id: Date.now(), name, done: [] });
+  input.value = "";
+  save(); render();
+}
+function toggle(id) {
+  if (dateKey(sel) > dateKey(new Date())) return;   // no future days
+  const h = habits.find(h => h.id === id);
+  const today = dateKey(sel);
+  h.done = h.done.includes(today) ? h.done.filter(d => d !== today) : [...h.done, today];
+  save(); render();
+}
+function remove(id) {
+  if (armedId !== id) {
+    armedId = id;
+    clearTimeout(armTimer);
+    armTimer = setTimeout(() => { armedId = null; render(); }, 3000);
+    render();
+    return;
+  }
+  habits = habits.filter(h => h.id !== id);
+  armedId = null;
+  save(); render();
+}
+
+function render() {
+  const today = dateKey(sel);
+  const doneCount = habits.filter(h => h.done.includes(today)).length;
+  const isToday = today === dateKey(new Date());
+  const future = today > dateKey(new Date());
+  summary.textContent = habits.length ? `${doneCount} of ${habits.length} done ${isToday ? "today" : "on this day"}` : "";
+  updateNav();
+  bar.style.width = habits.length ? (doneCount / habits.length * 100) + "%" : "0";
+
+  if (!habits.length) {
+    list.innerHTML = '<li class="empty">Nothing here yet. Add your first daily practice below.</li>';
+    return;
+  }
+  list.innerHTML = "";
+  habits.forEach(h => {
+    const isDone = h.done.includes(today);
+    const li = document.createElement("li");
+    li.className = "habit" + (isDone ? " done" : "");
+
+    let dots = "";
+    for (let i = 6; i >= 0; i--) {
+      const on = h.done.includes(dateKey(daysAgo(i)));
+      dots += `<span class="dot${on ? " on" : ""}${i === 0 ? " today" : ""}"></span>`;
+    }
+    const armed = armedId === h.id;
+
+    li.innerHTML = `
+      <button class="check" aria-label="Toggle done" ${future ? "disabled" : ""}>${isDone ? "✓" : ""}</button>
+      <div class="name"></div>
+      <div class="count"><b>${streak(h)}</b><span>day streak</span></div>
+      <div class="meta">
+        <div class="week" title="Last 7 days">${dots}</div>
+        <button class="delete${armed ? " armed" : ""}">${armed ? "Click again to delete" : "Delete"}</button>
+      </div>`;
+    li.querySelector(".name").textContent = h.name;
+    li.querySelector(".check").onclick = () => toggle(h.id);
+    li.querySelector(".delete").onclick = () => remove(h.id);
+    list.appendChild(li);
+  });
+}
+
+document.getElementById("add-btn").onclick = addHabit;
+input.addEventListener("keydown", e => { if (e.key === "Enter") addHabit(); });
+
+// ---------- date navigation ----------
+const monthLabel = document.getElementById("month-label");
+const dayLabel = document.getElementById("day-label");
+const picker = document.getElementById("picker");
+const todayBtn = document.getElementById("today-btn");
+
+function setDate(d) { d.setHours(12, 0, 0, 0); sel = d; render(); }
+function shiftDays(n) { const d = new Date(sel); d.setDate(d.getDate() + n); setDate(d); }
+function shiftMonths(n) {
+  const d = new Date(sel), day = d.getDate();
+  d.setDate(1);
+  d.setMonth(d.getMonth() + n);
+  const max = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();  // days in that month
+  d.setDate(Math.min(day, max));
+  setDate(d);
+}
+function updateNav() {
+  monthLabel.textContent = sel.toLocaleDateString("en", { month: "long", year: "numeric" });
+  dayLabel.textContent = sel.toLocaleDateString("en", { weekday: "long", day: "numeric" });
+  picker.value = dateKey(sel);
+  todayBtn.hidden = dateKey(sel) === dateKey(new Date());
+}
+document.getElementById("m-prev").onclick = () => shiftMonths(-1);
+document.getElementById("m-next").onclick = () => shiftMonths(1);
+document.getElementById("d-prev").onclick = () => shiftDays(-1);
+document.getElementById("d-next").onclick = () => shiftDays(1);
+todayBtn.onclick = () => setDate(new Date());
+picker.onchange = () => {
+  if (!picker.value) return;
+  const [y, m, d] = picker.value.split("-").map(Number);
+  setDate(new Date(y, m - 1, d));
+};
+
+render();
+</script>
+</body>
+</html>
